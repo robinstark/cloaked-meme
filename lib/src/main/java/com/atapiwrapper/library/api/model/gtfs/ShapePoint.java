@@ -21,9 +21,6 @@ public class ShapePoint implements Serializable, Parcelable {
         return lat;
     }
 
-
-
-
     @Override
     public int describeContents() {
         return 0;
