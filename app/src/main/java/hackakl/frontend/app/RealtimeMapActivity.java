@@ -3,6 +3,7 @@ package hackakl.frontend.app;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -40,7 +41,6 @@ public class RealtimeMapActivity extends FragmentActivity {
                 loadData();
             }
         });
-
     }
 
     @Override
@@ -115,6 +115,7 @@ public class RealtimeMapActivity extends FragmentActivity {
      */
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
+
         loadData();
     }
 }
