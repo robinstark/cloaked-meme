@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">frontend</string>
+    <string name="title_activity_realtime_map">Map</string>
+
+</resources>
