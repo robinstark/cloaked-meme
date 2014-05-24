@@ -1,9 +1,7 @@
 package hackakl.frontend.app;
 
-import android.location.Location;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
 
@@ -11,7 +9,6 @@ import com.atapiwrapper.library.api.AtApi;
 import com.atapiwrapper.library.api.model.ServerResponse;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocation;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocationResponse;
-import com.atapiwrapper.library.api.service.RealtimeService;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
