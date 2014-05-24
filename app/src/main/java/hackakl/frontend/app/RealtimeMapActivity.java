@@ -181,7 +181,7 @@ public class RealtimeMapActivity extends FragmentActivity {
 
             List<ShapePoint> shape = api.getGtfsService().shapeByTripId(tripId).getResponse();
             Route route = api.getGtfsService().routesById(routeId).getResponse().get(0);
-            List<Stop> stops = api.getGtfsService().
+//            List<Stop> stops = api.getGtfsService().stopsByRoute
 
             return new RouteShape(route, shape);
         }
