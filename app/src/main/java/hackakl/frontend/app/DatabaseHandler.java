@@ -21,8 +21,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private final String RT_ID = "rt_id";
     private final String RT_NAME = "rt_short_name";
 
-    public DatabaseHandler(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, name, factory, version);
+    public DatabaseHandler(Context context) {
+        super(context, "dbname", null, 1);
     }
 
     @Override

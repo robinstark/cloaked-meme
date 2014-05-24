@@ -1,17 +1,11 @@
 package hackakl.frontend.app;
 
-<<<<<<< HEAD
-import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-=======
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
-import android.location.Location;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.util.Property;
->>>>>>> ec75a11f8fd9cbf4095ca2ed134f4ac3a98b7cd0
 import android.view.View;
 import android.widget.Button;
 
@@ -26,7 +20,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.model.PolylineOptionsCreator;
 
 import java.util.List;
 
@@ -63,8 +56,6 @@ public class RealtimeMapActivity extends FragmentActivity {
     }
 
     public void loadData() {
-
-
         api.getRealtimeService().vehiclelocations(new Callback<ServerResponse<VehicleLocationResponse>>() {
             @Override
             public void success(ServerResponse<VehicleLocationResponse> vehicleLocationResponseServerResponse, Response response) {
@@ -81,7 +72,6 @@ public class RealtimeMapActivity extends FragmentActivity {
                         }
                     }
                 });
-
             }
 
             @Override
@@ -121,8 +111,6 @@ public class RealtimeMapActivity extends FragmentActivity {
 
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
-<<<<<<< HEAD
-=======
         mMap.setTrafficEnabled(true);
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
@@ -152,10 +140,9 @@ public class RealtimeMapActivity extends FragmentActivity {
                         Log.e("retrofit", error.toString());
                     }
                 });
+
             }
         });
->>>>>>> ec75a11f8fd9cbf4095ca2ed134f4ac3a98b7cd0
-
         loadData();
     }
 
