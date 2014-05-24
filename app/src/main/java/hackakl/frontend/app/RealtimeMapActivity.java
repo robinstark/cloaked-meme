@@ -2,7 +2,10 @@ package hackakl.frontend.app;
 
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,7 +15,9 @@ import android.widget.Button;
 
 import com.atapiwrapper.library.api.AtApi;
 import com.atapiwrapper.library.api.model.ServerResponse;
+import com.atapiwrapper.library.api.model.gtfs.Route;
 import com.atapiwrapper.library.api.model.gtfs.ShapePoint;
+import com.atapiwrapper.library.api.model.gtfs.Stop;
 import com.atapiwrapper.library.api.model.gtfs.Trip;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocation;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocationResponse;
@@ -40,8 +45,7 @@ public class RealtimeMapActivity extends FragmentActivity {
     private Button button;
     private AtApi api;
     Map<String, Marker> vehicleMarkers;
-
-
+    private List<VehicleLocation> vehicleLocations;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +62,11 @@ public class RealtimeMapActivity extends FragmentActivity {
                 loadData();
             }
         });
-
+        getActionBar().setLogo(R.drawable.logo);
+        getActionBar().setDisplayUseLogoEnabled(true);
+        getActionBar().setTitle("LinkAKL");
+        getActionBar().setDisplayShowTitleEnabled(false);
+        getActionBar().setBackgroundDrawable(new ColorDrawable(android.R.color.white));
     }
 
     @Override
@@ -68,34 +76,25 @@ public class RealtimeMapActivity extends FragmentActivity {
     }
 
     public void loadData() {
-
-
         api.getRealtimeService().vehiclelocations(new Callback<ServerResponse<VehicleLocationResponse>>() {
             @Override
             public void success(ServerResponse<VehicleLocationResponse> vehicleLocationResponseServerResponse, Response response) {
-                final List<VehicleLocation> locationList = vehicleLocationResponseServerResponse.getResponse().getVehicleLocations();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-//                        mMap.clear();
-                        for (VehicleLocation loc: locationList) {
-                            final LatLng l = new LatLng(loc.getVehicle().getPosition().getLatitude(), loc.getVehicle().getPosition().getLongitude());
-                            final String snippet = loc.getVehicle().getTrip().getRouteId();
-                            final String title = loc.getVehicle().getTrip().getTripId();
-                            final String vehicleId = loc.getVehicle().getVehicle().getId();
-                            Log.d("MarkerId", vehicleId);
-                            Marker existingMarker = vehicleMarkers.get(vehicleId);
-                            if (existingMarker != null) {
-                                animateMarkerToICS(existingMarker, l, new LatLngInterpolator.Spherical());
-                            } else {
-                                Log.d("ADDING marker:", vehicleId);
-                                vehicleMarkers.put(vehicleId, mMap.addMarker(new MarkerOptions().position(l).snippet(snippet).title(title)));
-                            }
+                vehicleLocations = vehicleLocationResponseServerResponse.getResponse().getVehicleLocations();
 
-                        }
+                for (VehicleLocation vl: vehicleLocations) {
+                    final LatLng l = new LatLng(vl.getVehicle().getPosition().getLatitude(), vl.getVehicle().getPosition().getLongitude());
+                    final String snippet = vl.getVehicle().getTrip().getRouteId();
+                    final String title = vl.getVehicle().getTrip().getTripId();
+                    final String vehicleId = vl.getVehicle().getVehicle().getId();
+                    Log.d("MarkerId", vehicleId);
+                    Marker existingMarker = vehicleMarkers.get(vehicleId);
+                    if (existingMarker != null) {
+                        animateMarkerToICS(existingMarker, l, new LatLngInterpolator.Spherical());
+                    } else {
+                        Log.d("ADDING marker:", vehicleId);
+                        vehicleMarkers.put(vehicleId, mMap.addMarker(new MarkerOptions().position(l).snippet(snippet).title(title)));
                     }
-                });
-
+                }
             }
 
             @Override
@@ -140,31 +139,7 @@ public class RealtimeMapActivity extends FragmentActivity {
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                String tripId = marker.getTitle();
-                api.getGtfsService().shapeByTripId(tripId, new Callback<ServerResponse<List<ShapePoint>>>() {
-                    @Override
-                    public void success(ServerResponse<List<ShapePoint>> listServerResponse, Response response) {
-
-                        PolylineOptions opts = new PolylineOptions();
-                        for (ShapePoint p : listServerResponse.getResponse()) {
-                            final LatLng l = new LatLng(p.getLat(), p.getLon());
-                            opts.add(l);
-                        }
-
-                        opts.color(getResources().getColor(android.R.color.black));
-                        opts.geodesic(true);
-                        opts.visible(true);
-                        opts.zIndex(1000.0f);
-
-                        mMap.addPolyline(opts);
-                        mMap.setTrafficEnabled(false);
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Log.e("retrofit", error.toString());
-                    }
-                });
+                new LoadRouteAsyncTask().execute(marker.getSnippet(), marker.getTitle());
             }
         });
 
@@ -194,6 +169,38 @@ public class RealtimeMapActivity extends FragmentActivity {
         public void onMyLocationChange(Location location) {
             map.setOnMyLocationChangeListener(null);
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 14));
+        }
+    }
+
+    private class LoadRouteAsyncTask extends AsyncTask<String, Void, RouteShape> {
+
+        @Override
+        protected RouteShape doInBackground(String... params) {
+            final String routeId = params[0];
+            final String tripId = params[1];
+
+            List<ShapePoint> shape = api.getGtfsService().shapeByTripId(tripId).getResponse();
+            Route route = api.getGtfsService().routesById(routeId).getResponse().get(0);
+            List<Stop> stops = api.getGtfsService().
+
+            return new RouteShape(route, shape);
+        }
+
+        @Override
+        protected void onPostExecute(RouteShape routeShape) {
+            PolylineOptions opts = new PolylineOptions();
+            for (ShapePoint p : routeShape.shape) {
+                final LatLng l = new LatLng(p.getLat(), p.getLon());
+                opts.add(l);
+            }
+
+            opts.color(Color.parseColor("#FF8800"));
+            opts.geodesic(true);
+            opts.visible(true);
+            opts.zIndex(1000.0f);
+
+            mMap.addPolyline(opts);
+            mMap.setTrafficEnabled(false);
         }
     }
 }
