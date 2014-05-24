@@ -2,11 +2,15 @@ package hackakl.frontend.app;
 
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.util.Property;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -35,20 +39,31 @@ public class RealtimeMapActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Button button;
+    private Button favButton;
     private AtApi api;
+    private static DatabaseHandler dbHandler;
     Map<String, Marker> vehicleMarkers;
-
-
+    private String id, name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         api = new AtApi(getString(R.string.at_api_key));
         vehicleMarkers = new HashMap<>();
+        dbHandler = new DatabaseHandler(this);
         setContentView(R.layout.activity_realtime_map);
         setUpMapIfNeeded();
         button = (Button) findViewById(R.id.button);
         button.setText("Refresh");
+        favButton = (Button) findViewById(R.id.fave_save);
+        favButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if ( id != null && name != null) {
+                    dbHandler.addRoute(id, name);
+                }
+            }
+        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -61,6 +76,20 @@ public class RealtimeMapActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu)  {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.map_menu, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId())   {
+            case R.id.action_favorites :
+                this.startActivity(new Intent(this, FavActivity.class));
+        }
+        return true;
     }
 
     public void loadData() {
@@ -158,7 +187,7 @@ public class RealtimeMapActivity extends FragmentActivity {
                         Log.e("retrofit", error.toString());
                     }
                 });
-
+                favButton.setVisibility(View.VISIBLE);
             }
         });
         loadData();
