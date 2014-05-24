@@ -2,6 +2,7 @@ package hackakl.frontend.app;
 
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -14,6 +15,7 @@ import com.atapiwrapper.library.api.model.ServerResponse;
 import com.atapiwrapper.library.api.model.gtfs.ShapePoint;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocation;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocationResponse;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -21,7 +23,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -32,15 +36,19 @@ public class RealtimeMapActivity extends FragmentActivity {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Button button;
     private AtApi api;
+    Map<String, Marker> vehicleMarkers;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         api = new AtApi(getString(R.string.at_api_key));
+        vehicleMarkers = new HashMap<>();
         setContentView(R.layout.activity_realtime_map);
         setUpMapIfNeeded();
         button = (Button) findViewById(R.id.button);
-        button.setText("Foo!");
+        button.setText("Refresh");
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,12 +71,21 @@ public class RealtimeMapActivity extends FragmentActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mMap.clear();
+//                        mMap.clear();
                         for (VehicleLocation loc: locationList) {
                             final LatLng l = new LatLng(loc.getVehicle().getPosition().getLatitude(), loc.getVehicle().getPosition().getLongitude());
                             final String snippet = loc.getVehicle().getTrip().getRouteId();
                             final String title = loc.getVehicle().getTrip().getTripId();
-                            mMap.addMarker(new MarkerOptions().position(l).snippet(snippet).title(title));
+                            final String vehicleId = loc.getVehicle().getVehicle().getId();
+                            Log.d("MarkerId", vehicleId);
+                            Marker existingMarker = vehicleMarkers.get(vehicleId);
+                            if (existingMarker != null) {
+                                animateMarkerToICS(existingMarker, l, new LatLngInterpolator.Spherical());
+                            } else {
+                                Log.d("ADDING marker:", vehicleId);
+                                vehicleMarkers.put(vehicleId, mMap.addMarker(new MarkerOptions().position(l).snippet(snippet).title(title)));
+                            }
+
                         }
                     }
                 });
@@ -112,6 +129,7 @@ public class RealtimeMapActivity extends FragmentActivity {
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
         mMap.setTrafficEnabled(true);
+        mMap.setOnMyLocationChangeListener(new CenterOnMyLocationOnceListener(mMap));
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
@@ -124,8 +142,8 @@ public class RealtimeMapActivity extends FragmentActivity {
                         for (ShapePoint p : listServerResponse.getResponse()) {
                             final LatLng l = new LatLng(p.getLat(), p.getLon());
                             opts.add(l);
-
                         }
+
                         opts.color(getResources().getColor(android.R.color.black));
                         opts.geodesic(true);
                         opts.visible(true);
@@ -157,5 +175,18 @@ public class RealtimeMapActivity extends FragmentActivity {
         ObjectAnimator animator = ObjectAnimator.ofObject(marker, property, typeEvaluator, finalPosition);
         animator.setDuration(3000);
         animator.start();
+    }
+
+    private class CenterOnMyLocationOnceListener implements GoogleMap.OnMyLocationChangeListener {
+        private final GoogleMap map;
+
+        public CenterOnMyLocationOnceListener(GoogleMap map) {
+            this.map = map;
+        }
+        @Override
+        public void onMyLocationChange(Location location) {
+            map.setOnMyLocationChangeListener(null);
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 14));
+        }
     }
 }
