@@ -5,6 +5,7 @@ import com.atapiwrapper.library.api.model.gtfs.Agency;
 import com.atapiwrapper.library.api.model.gtfs.Calendar;
 import com.atapiwrapper.library.api.model.gtfs.CalendarException;
 import com.atapiwrapper.library.api.model.gtfs.Route;
+import com.atapiwrapper.library.api.model.gtfs.ShapePoint;
 import com.atapiwrapper.library.api.model.gtfs.Stop;
 import com.atapiwrapper.library.api.model.gtfs.StopTime;
 import com.atapiwrapper.library.api.model.gtfs.Trip;
@@ -35,6 +36,9 @@ public interface GtfsService {
 	 * @param cb - callback that gets called on request complete
 	 */
 	@GET("/gtfs/agency") void agencies(Callback<ServerResponse<List<Agency>>> cb);
+
+
+    @GET("/gtfs/shapes/tripId/{tripId}") void shapeByTripId(@Path("tripId") String tripId, Callback<ServerResponse<List<ShapePoint>>> cb);
 
 	//---------------------------------------
 	//	Calendars

@@ -1,18 +1,32 @@
 package hackakl.frontend.app;
 
+<<<<<<< HEAD
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+=======
+import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
+import android.location.Location;
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.util.Property;
+>>>>>>> ec75a11f8fd9cbf4095ca2ed134f4ac3a98b7cd0
 import android.view.View;
 import android.widget.Button;
 
 import com.atapiwrapper.library.api.AtApi;
 import com.atapiwrapper.library.api.model.ServerResponse;
+import com.atapiwrapper.library.api.model.gtfs.ShapePoint;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocation;
 import com.atapiwrapper.library.api.model.realtime.vehiclelocations.VehicleLocationResponse;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.PolylineOptionsCreator;
 
 import java.util.List;
 
@@ -24,10 +38,12 @@ public class RealtimeMapActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Button button;
+    private AtApi api;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        api = new AtApi(getString(R.string.at_api_key));
         setContentView(R.layout.activity_realtime_map);
         setUpMapIfNeeded();
         button = (Button) findViewById(R.id.button);
@@ -47,7 +63,7 @@ public class RealtimeMapActivity extends FragmentActivity {
     }
 
     public void loadData() {
-        AtApi api = new AtApi("f6d06e87-e4be-41c6-9b8c-3507660447d8");
+
 
         api.getRealtimeService().vehiclelocations(new Callback<ServerResponse<VehicleLocationResponse>>() {
             @Override
@@ -62,7 +78,6 @@ public class RealtimeMapActivity extends FragmentActivity {
                             final String snippet = loc.getVehicle().getTrip().getRouteId();
                             final String title = loc.getVehicle().getTrip().getTripId();
                             mMap.addMarker(new MarkerOptions().position(l).snippet(snippet).title(title));
-
                         }
                     }
                 });
@@ -104,15 +119,56 @@ public class RealtimeMapActivity extends FragmentActivity {
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
+<<<<<<< HEAD
+=======
+        mMap.setTrafficEnabled(true);
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                String tripId = marker.getTitle();
+                api.getGtfsService().shapeByTripId(tripId, new Callback<ServerResponse<List<ShapePoint>>>() {
+                    @Override
+                    public void success(ServerResponse<List<ShapePoint>> listServerResponse, Response response) {
+
+                        PolylineOptions opts = new PolylineOptions();
+                        for (ShapePoint p : listServerResponse.getResponse()) {
+                            final LatLng l = new LatLng(p.getLat(), p.getLon());
+                            opts.add(l);
+
+                        }
+                        opts.color(getResources().getColor(android.R.color.black));
+                        opts.geodesic(true);
+                        opts.visible(true);
+                        opts.zIndex(1000.0f);
+
+                        mMap.addPolyline(opts);
+                        mMap.setTrafficEnabled(false);
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        Log.e("retrofit", error.toString());
+                    }
+                });
+            }
+        });
+>>>>>>> ec75a11f8fd9cbf4095ca2ed134f4ac3a98b7cd0
 
         loadData();
+    }
+
+    static void animateMarkerToICS(Marker marker, LatLng finalPosition, final LatLngInterpolator latLngInterpolator) {
+        TypeEvaluator<LatLng> typeEvaluator = new TypeEvaluator<LatLng>() {
+            @Override
+            public LatLng evaluate(float fraction, LatLng startValue, LatLng endValue) {
+                return latLngInterpolator.interpolate(fraction, startValue, endValue);
+            }
+        };
+        Property<Marker, LatLng> property = Property.of(Marker.class, LatLng.class, "position");
+        ObjectAnimator animator = ObjectAnimator.ofObject(marker, property, typeEvaluator, finalPosition);
+        animator.setDuration(3000);
+        animator.start();
     }
 }
