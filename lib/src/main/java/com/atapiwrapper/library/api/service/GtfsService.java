@@ -39,6 +39,7 @@ public interface GtfsService {
 
 
     @GET("/gtfs/shapes/tripId/{tripId}") void shapeByTripId(@Path("tripId") String tripId, Callback<ServerResponse<List<ShapePoint>>> cb);
+    @GET("/gtfs/shapes/tripId/{tripId}") ServerResponse<List<ShapePoint>> shapeByTripId(@Path("tripId") String tripId);
 
 	//---------------------------------------
 	//	Calendars
