@@ -194,7 +194,7 @@ public class RealtimeMapActivity extends FragmentActivity {
                 opts.add(l);
             }
 
-            opts.color(Color.parseColor("#FF8800"));
+            opts.color(Color.parseColor("#0099CC"));
             opts.geodesic(true);
             opts.visible(true);
             opts.zIndex(1000.0f);
